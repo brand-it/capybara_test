@@ -10,7 +10,7 @@ require 'selenium/webdriver'
 Capybara.app = App
 Capybara.server = :webrick
 Capybara::Screenshot.prune_strategy = :keep_last_run
-
+Capybara.save_path = 'tmp'
 Capybara.register_driver :remote_chrome do |app|
   Capybara::Selenium::Driver.new(
     app,
@@ -21,10 +21,9 @@ Capybara.register_driver :remote_chrome do |app|
 end
 
 Capybara.configure do |config|
-  config.default_max_wait_time = 30
   config.default_driver = :rack_test
   config.javascript_driver = :remote_chrome
-  config.app_host = 'http://localhost:9292'
+  config.app_host = 'http://host.docker.internal:9292'
   config.server_host = '0.0.0.0'
   config.server_port = 9292
 end

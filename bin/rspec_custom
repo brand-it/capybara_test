@@ -19,11 +19,20 @@ def system!(*cmd)
   response
 end
 
-docker_response = system!('docker run --publish 4444:4444 --rm --detach selenium/standalone-chrome:3.12')
+docker_response = system!(
+  'docker run --network bridge --rm --detach --publish'\
+  ' 4444:4444 selenium/standalone-chrome:3.12'
+)
 puts "Docker Selenium started #{docker_response.stdout_str}"
 
 begin
-  `bundle exec rspec`
+  tries = 0
+  testing = true
+  while testing
+    testing = Kernel.system('bundle exec rspec')
+    tries += 1
+  end
+  puts "Failed on try #{tries}"
 ensure
   system!("docker stop #{docker_response.stdout_str.strip}")
 end

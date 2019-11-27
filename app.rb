@@ -12,7 +12,7 @@ class App < Rack::App
 
   desc 'Search With Modal'
   get '/search' do
-    File.read('index.html')
+    File.read(File.expand_path('./index.html'))
   end
 
   root '/search'
