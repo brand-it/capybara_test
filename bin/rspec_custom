@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+require 'open3'
+
+Open3::Response = Struct.new(:stdout_str, :stderr_str, :status, :cmd)
+
+def capture3(*cmd)
+  puts " \033[0;33mrunning #{cmd}\033[0m" if @debug
+  stdout_str, stderr_str, status = Open3.capture3(*cmd)
+  Open3::Response.new(stdout_str, stderr_str, status, *cmd)
+end
+
+def system!(*cmd)
+  response = capture3(*cmd)
+  puts caller unless response.status.success?
+  unless response.status.success?
+    abort "\033[0;33mFailure #{cmd}\n\033[0;31m  #{response.stderr_str}\033[0m"
+  end
+
+  response
+end
+
+docker_response = system!('docker run --publish 4444:4444 --rm --detach selenium/standalone-chrome:3.12')
+puts "Docker Selenium started #{docker_response.stdout_str}"
+
+begin
+  `bundle exec rspec`
+ensure
+  system!("docker stop #{docker_response.stdout_str.strip}")
+end
