@@ -28,15 +28,84 @@ Capybara.configure do |config|
   config.server_port = 9292
 end
 
+# Headless Chrome screenshots
+Capybara::Screenshot.register_driver(:remote_chrome) do |driver, path|
+  driver.browser.save_screenshot(path)
+end
+
+module Capybara
+  module CustomMatchers
+    class HaveFilledIn
+      include Capybara::DSL
+      extend Dry::Initializer
+      param :locator
+      option :with
+      option :retries, default: -> { 2 }
+      option :find_options, default: -> { {} }
+      option :fill_options, default: -> { {} }
+
+      def description
+        "have filled in with #{locator} with #{with}"
+      end
+
+      def matches?(page)
+        field = fillable_field(page)
+        retry_until_filled(field) { field.set(with, fill_options) }
+        field.value == with
+      end
+
+      def failure_message
+        field = fillable_field(page)
+        "expected that \"#{locator}\" would have filled in value of"\
+        " \"#{with}\" but actually was \"#{field.value}\""
+      end
+      alias failure_message_when_negated failure_message
+
+      private
+
+      def fillable_field(page)
+        page.find(:fillable_field, locator, find_options)
+      end
+
+      def retry_until_filled(field, &block)
+        tries = 0
+        until tries > retries || field.value == with
+          yield block
+          tries += 1
+        end
+      end
+    end
+
+    # From Time to Time, the fill_in method will fail to fill in the values.
+    # In order to prevent flaky tests and more failure resistant,
+    # this have _filled_in does a retry and a check to make sure the
+    # value has filled incorrectly.
+    #
+    # expect(page).to have_filled_in('search', with: 'A bunch of gibberish')
+    # expect(page).to have_filled_in(
+    #   'search',
+    #   with: 'A bunch of gibberish',
+    #   retries: 2,
+    #   find_options: { allow_self: true, with: 'All ready filled in' },
+    #   fill_options: { clear: true }
+    # )
+    def have_filled_in(*args)
+      HaveFilledIn.new(*args)
+    end
+  end
+end
+
+RSpec.configure do |config|
+  config.include Capybara::CustomMatchers, type: :feature
+end
+
 describe '/search', type: :feature, js: true do
   it 'fills in the search model input' do
     visit '/'
     page.click_on 'Launch demo modal'
 
     within('#exampleModal') do
-      search = page.find('input[name=search]')
-      search.fill_in with: 'A bunch of gibberish'
-      expect(page).to have_field('search', with: 'A bunch of gibberish')
+      expect(page).to have_filled_in('search', with: 'A bunch of gibberish')
     end
   end
 end

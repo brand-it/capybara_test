@@ -5,6 +5,7 @@ source 'https://rubygems.org'
 gem 'loader'
 gem 'rack'
 gem 'rack-app', require: 'rack/app'
+gem 'dry-initializer'
 
 group :development do
   gem 'capybara'
