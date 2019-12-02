@@ -36,7 +36,7 @@ describe '/search', type: :feature, js: true do
     within('#exampleModal') do
       search = page.find('input[name=search]')
       search.fill_in with: 'A bunch of gibberish'
-      expect(search.value).to eq('A bunch of gibberish')
+      expect(page).to have_field('search', with: 'A bunch of gibberish')
     end
   end
 end
