@@ -12,4 +12,5 @@ group :development do
   gem 'cucumber'
   gem 'rspec'
   gem 'selenium-webdriver'
+  gem 'pry'
 end

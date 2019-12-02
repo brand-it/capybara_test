@@ -23,16 +23,18 @@ docker_response = system!(
   'docker run --network bridge --rm --detach --publish'\
   ' 4444:4444 selenium/standalone-chrome:3.12'
 )
+sleep 2
 puts "Docker Selenium started #{docker_response.stdout_str}"
 
 begin
   tries = 0
-  testing = true
-  while testing
-    testing = Kernel.system('bundle exec rspec')
+  while tries < 1000
     tries += 1
+    if !Kernel.system('bundle exec rspec --backtrace')
+      abort "\033[0;33mFailed on try #{tries}\033[0m"
+    end
   end
-  puts "Failed on try #{tries}"
+  puts "\033[0;33mI think we are good we run it 200 times and never failed #{tries}\033[0m"
 ensure
   system!("docker stop #{docker_response.stdout_str.strip}")
 end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../app'
-
+require 'pry'
 require 'capybara'
 require 'capybara/rspec'
 require 'capybara-screenshot/rspec'
